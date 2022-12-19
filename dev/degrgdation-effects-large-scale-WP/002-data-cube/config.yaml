@@ -1,0 +1,30 @@
+model_config:
+  number_of_trees: 1000
+  predictors: null
+  class_properties: land_cover_values
+
+assets:
+  S1:
+    -
+    -
+    -
+  S2:
+    DC: projects/fpca-336015/assets/williston-cba
+
+case_config:
+  name:
+  training_data:
+    limit: true
+    file_name:
+    layer:
+    driver:
+
+  bounding_geometry:
+    file_name:
+    layer:
+    driver:
+
+  viewport:
+    file_name:
+    layer:
+    driver:
