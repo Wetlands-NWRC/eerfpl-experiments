@@ -6,11 +6,11 @@ model_config:
   class_properties: land_cover_values
 
 viewport:
-  file_name: ../000-training-data/phase01_viewport.shp
+  file_name: ../000-data/phase01_viewport.shp
   driver: ESRI Shapefile
 
 training_data:
-  file_name: ../000-training-data/training_data.gdb
+  file_name: ../000-data/training_data.gdb
   layer: training_points
   driver: FileGDB
 
@@ -25,10 +25,10 @@ assets:
 
   benchmark:
     S1:
-      -
-      -
+      - COPERNICUS/S1_GRD/S1B_IW_GRDH_1SDV_20180517T142651_20180517T142716_010962_014115_CA58
+      - COPERNICUS/S1_GRD/S1B_IW_GRDH_1SDV_20180728T142655_20180728T142720_012012_0161D6_96BF
     S2:
-      -
-      -
+      - COPERNICUS/S2/20180519T191909_20180519T192621_T10UEF
+      - COPERNICUS/S2/20180728T191909_20180728T192508_T10UEF
 
-  dem:
+  dem: NASA/NASADEM_HGT/001

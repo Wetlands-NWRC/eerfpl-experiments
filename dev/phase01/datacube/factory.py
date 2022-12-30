@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import ee
 import eelib
@@ -19,10 +19,17 @@ def s1_driv_factory(imgs: List[ee.Image]):
     return ratios
 
 
-def datacube_factory(asset_id: str, viewport: ee.Geometry) -> List[ee.Image]:
+def datacube_factory(asset_id: str, viewport: ee.Geometry) -> Tuple[List[ee.Image], ee.ImageCollection]:
+    def set_tile_id(element: ee.Image):
+        row = ee.Number(element.get('row')).format('%03d')
+        col = ee.Number(element.get('col')).format('%03d')
+        tile_id = row.cat(col)
+        return element.set('tileID', tile_id)
+
     # remap bands to data cube descriptors
     CFG = plcfgs.DataCubeCfg()
     dc = ee.ImageCollection(asset_id).filterBounds(viewport).\
+        map(set_tile_id).\
         select(
             selectors=CFG.src_bands,
             opt_names=CFG.dest_bands
@@ -35,7 +42,7 @@ def datacube_factory(asset_id: str, viewport: ee.Geometry) -> List[ee.Image]:
                for selector in CFG.band_prefix.values()]
     dc_imgs = [dc_img.select(dc_img.bandNames(), s2_sr_bands) for dc_img in
                dc_imgs]
-    return dc_imgs
+    return dc_imgs, dc
 
 
 def s2_factory(imgs: List[str]) -> List[ee.Image]:

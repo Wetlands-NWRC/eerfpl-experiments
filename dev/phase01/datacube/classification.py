@@ -4,13 +4,10 @@ import ee
 import factory
 import yaml
 from eelib import bands
-from pipelines import eerfpl, logging
+from pipelines import colors, eerfpl, logging
 
 
 def datacube(config):
-
-    def set_tileid(element):
-        pass
 
     with open(config) as stream:
         CFG: Dict[str, Any] = yaml.safe_load(stream=stream)
@@ -18,18 +15,22 @@ def datacube(config):
     viewport_cfg = CFG.get('viewport', None)
     training_data_cfg = CFG.get('training_data', None)
     model_cfg = CFG.get('model_config', None)
-    assets_cfg = CFG.get('assets').get('datacube')
+    assets_cfg = CFG.get('assets')
+    dc_cfg = assets_cfg.get('datacube')
+    dem_cfg = assets_cfg.get('dem')
 
     viewport = ee.FeatureCollection.from_file(
         filename=viewport_cfg.get('file_name'),
         driver=viewport_cfg.get('driver')
     ).geometry()
 
-    s1_imgs = factory.s1_factory(assets_cfg.get('S1'))
+    s1_imgs = factory.s1_factory(dc_cfg.get('S1'))
     dc_imgs = factory.datacube_factory(
-        asset_id=assets_cfg.get('S2').get('DC'),
+        asset_id=dc_cfg.get('S2').get('DC'),
         viewport=viewport
     )
+
+    dem = ee.Image(dem_cfg)
 
     training_data = factory.training_data(
         file_name=training_data_cfg.get('file_name'),
@@ -39,25 +40,46 @@ def datacube(config):
 
     pipe = eerfpl.eeRFPipeline(
         sar=s1_imgs,
-        optical=dc_imgs,
-        dem=None,
+        optical=dc_imgs[0],
+        dem=dem,
         training_data=training_data
     )
 
     pipe.optical_bands = [str(_.name) for _ in bands.S2SR]
 
-    pipe.run()
+    output = pipe.run()
 
-    model = eerfpl.RandomForest(
-        n_trees=1000
+    ############################################################################
+    # Logging
+    ############################################################################
+    logger = logging.eeLogger
+
+    # logging
+    # Data Cube logging
+    dc_tiles = logger.dct_logger(
+        tileIDs=dc_imgs[1].aggregate_array('tileID'),
+        system_index=dc_imgs[1].aggregate_array('system:index')
     )
-    model.train(
-        featues=training_data,
-        class_label='land_cover_values',
-        predictors=stack.bandNames()
+    dc_dates = logger.datacube_dates()
+
+    # Sentiel - 1 Logging
+    s1_log = logger.Sentinel1_Logger(s1_imgs)
+
+    # Training Data logging
+    training_data = output.get('training_data')
+
+    lookup = logger.lookup(
+        collection=training_data.collection,
+        label_col=training_data.class_labels,
+        value_col=training_data.class_values,
+        colors=colors.Colors.to_eeDict()
     )
 
-    classify = stack.classify(model.model)
+    log_predictors = logger.predictors(pipe.predictors)
+    b = ' '
+
+    #
+
     pass
 
 
