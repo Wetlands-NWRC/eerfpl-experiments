@@ -29,20 +29,15 @@ def datacube_factory(asset_id: str, viewport: ee.Geometry) -> Tuple[List[ee.Imag
     # remap bands to data cube descriptors
     CFG = plcfgs.DataCubeCfg()
     dc = ee.ImageCollection(asset_id).filterBounds(viewport).\
-        map(set_tile_id).\
-        select(
-            selectors=CFG.src_bands,
-            opt_names=CFG.dest_bands
-    )
+        map(set_tile_id).mosaic().select(CFG.src_bands, CFG.dest_bands)
 
     # parse the image into spring summer fall
     s2_sr_bands = [str(_.name) for _ in bands.S2SR]
     # remap the parsed images to Sentinel - 2 SR band mappings
-    dc_imgs = [dc.select(selector).mosaic()
-               for selector in CFG.band_prefix.values()]
-    dc_imgs = [dc_img.select(dc_img.bandNames(), s2_sr_bands) for dc_img in
-               dc_imgs]
-    return dc_imgs, dc
+    dc_seasonal = [dc.select(selector)
+                   for selector in CFG.band_prefix.values()]
+    dc_out = [_.select(_.bandNames(), s2_sr_bands) for _ in dc_seasonal]
+    return dc_out
 
 
 def s2_factory(imgs: List[str]) -> List[ee.Image]:

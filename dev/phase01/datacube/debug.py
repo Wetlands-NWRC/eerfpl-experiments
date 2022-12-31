@@ -6,7 +6,7 @@ CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def main():
-    classification.datacube(
+    classification.benchmark(
         config="./config.yaml"
     )
 

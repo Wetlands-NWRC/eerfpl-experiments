@@ -11,7 +11,7 @@ viewport:
 
 training_data:
   file_name: ../000-data/training_data.gdb
-  layer: training_points
+  layer: training_points_700
   driver: FileGDB
 
 assets:
